@@ -22,6 +22,7 @@ var corsOptions = {
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 app.use(cors(corsOptions))
+app.use(express.static('build'))
 
 let persons = [
   {
@@ -114,7 +115,7 @@ app.get('/info', (req,res) => {
 })
 
 
-const PORT = process.env.PORT //|| 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
