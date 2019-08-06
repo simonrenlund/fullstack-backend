@@ -16,27 +16,12 @@ app.use(morgan(function (tokens, req, res) {
   }
   return log.join(' ')
 }))
-
-let notes = [
-  {
-    id: 1,
-    content: "HTML is easy",
-    date: "2019-05-30T17:30:31.098Z",
-    important: true
-  },
-  {
-    id: 2,
-    content: "Browser can execute only Javascript",
-    date: "2019-05-30T18:39:34.091Z",
-    important: false
-  },
-  {
-    id: 3,
-    content: "GET and POST are the most important methods of HTTP protocol",
-    date: "2019-05-30T19:20:14.298Z",
-    important: true
-  }
-]
+const cors = require('cors')
+var corsOptions = {
+  origin: 'http://localhost:3000',
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+app.use(cors(corsOptions))
 
 let persons = [
   {
@@ -65,33 +50,6 @@ let persons = [
   }
 ]
 
-//notes stuff
-app.get('/', (req, res) => {
-  res.send('<h1>Hello World!</h1>')
-})
-
-app.get('/notes', (req, res) => {
-  res.json(notes)
-})
-
-app.get('/notes/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const note = notes.find(note => note.id === id)
-
-  if (note) {
-    res.json(note)
-  } else {
-    res.status(404).end()
-  }
-})
-
-app.delete('/notes/:id', (req, res) => {
-  const id = Number(req.params.id)
-  notes = notes.filter(note => note.id !== id)
-
-  res.status(204).end()
-})
-
 //phonebook
 app.get('/api/persons', (req, res) => {
   res.json(persons)
@@ -111,7 +69,7 @@ app.post('/api/persons', (req, res) => {
   let error = 0
   if (!req.body.name || !req.body.number) {
     error = 1
-    res.status(404).json({
+    res.status(400).json({
       error: 'content missing'
     })
   }
@@ -123,17 +81,18 @@ app.post('/api/persons', (req, res) => {
       })
     }
   }
-  //if (error === 0) {
+  if (error === 0) {
     const id = Math.floor(Math.random()*10000)
     const person = {
       id: id,
       name: req.body.name,
-      number: req.body.number
+      number: req.body.number,
+      display: true
     }
     persons = persons.concat(person)
     res.json(person)
-    //res.send('<div>'+ person.name + ' with number ' + person.number + ' was added successfully!')
-  //}
+
+  }
 
 })
 
@@ -155,7 +114,7 @@ app.get('/info', (req,res) => {
 })
 
 
-const PORT = 3001
+const PORT = 80//process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
