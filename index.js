@@ -25,7 +25,7 @@ app.use(morgan(function (tokens, req, res) {
 //cors
 const cors = require('cors')
 var corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: '/',
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 app.use(cors(corsOptions))
@@ -44,48 +44,44 @@ app.get('/api/persons/:id', (req, res, next) => {
     if (person) {
       res.json(person.toJSON())
     } else {
-      next(unknownEndpoint)
+      next()
     }
   }).catch(error => next(error))
 
 })
-//WIP
+
 app.get('/info', (req,res) => {
   const d = new Date()
   d.toString()
-  console.log(d)
-  const persons = Person.find({})
-  const amount = persons.length
-  res.send(
-    '<div>Phonebook has info for '+ amount +' people.</div><div>'+ d + '</div>'
-  )
+  Person.count({}).then(count => {
+    res.send('<div>phonebook has info for '+ count +' people.</div><div>'+ d +'</div>')
+  })
 })
 
 //POST
 //TODO: complete error handling
 app.post('/api/persons', (req, res, next) => {
-  let error = 0
   if (!req.body.name || !req.body.number) {
-    error = {name: 'ContentMissing'}
-    next(error)
+    return next(new Error('contentMissing'))
   }
   Person.find({name: req.body.name}).then(person => {
+    console.log('persons: ',person)
     if (person) {
-      error = {name: 'NotUnique'}
-      next(error)
+      console.log('person exists')
+      return next(new Error('notUnique'))
     }
+  }).then(() => {
+    console.log('continuing execution')
+      const person = new Person({
+        name: req.body.name,
+        number: req.body.number,
+        display: true
+      })
+      person.save().then(savedPerson => {
+        console.log('person sent to db')
+        res.json(savedPerson.toJSON())
+      })
   })
-  if (error === 0) {
-    const person = new Person({
-      name: req.body.name,
-      number: req.body.number,
-      display: true
-    })
-    person.save().then(savedPerson => {
-      res.json(savedPerson.toJSON())
-    })
-
-  }
 
 })
 
@@ -114,29 +110,28 @@ app.delete('/api/persons/:id', (req, res, next) => {
 
 //ERRORS
 //404
-/*
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
-*/
 //400
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
-  console.log('parsed through separate error handler.')
-  if (error.name === 'CastError' && error.kind == 'ObjectId') {
-    return response.status(400).send({ error: 'malformatted id' })
-  } else if (error.name === 'ContentMissing') {
-    return response.status(400).send({error: 'content missing'})
-  } else if (error.name === 'NotUnique') {
-    return response.status(400).send({error: 'name must be unique'})
+const errorHandler = (err, req, res, next) => {
+  console.error(err)
+  if (err.name === 'CastError' && err.kind == 'ObjectId') {
+    return res.status(400).send({ error: 'malformatted id' })
+  } else if (err.name === 'Error') {
+    if (err.message === 'contentMissing') {
+      return res.status(400).send({error: 'content missing'})
+    } else if (err.message === 'notUnique') {
+      return res.status(400).send({error: 'name not unique'})
+    }
   }
-
-  next(error)
+  next(err)
 }
 
 app.use(errorHandler)
+
 
 //PORT
 const PORT = process.env.PORT
