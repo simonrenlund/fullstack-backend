@@ -59,29 +59,26 @@ app.get('/info', (req,res) => {
 })
 
 //POST
-//TODO: complete error handling
 app.post('/api/persons', (req, res, next) => {
   if (!req.body.name || !req.body.number) {
     return next(new Error('contentMissing'))
   }
   Person.find({name: req.body.name}).then(person => {
-    console.log('persons: ',person)
     if (person) {
-      console.log('person exists')
-      return next(new Error('notUnique'))
+      error = 1
+      throw new Error('notUnique')
     }
-  }).then(() => {
     console.log('continuing execution')
-      const person = new Person({
+      const p = new Person({
         name: req.body.name,
         number: req.body.number,
         display: true
       })
-      person.save().then(savedPerson => {
+      p.save().then(savedPerson => {
         console.log('person sent to db')
         res.json(savedPerson.toJSON())
       })
-  })
+  }).catch(err => next(err))
 
 })
 
