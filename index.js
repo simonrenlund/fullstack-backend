@@ -60,25 +60,14 @@ app.get('/info', (req,res) => {
 
 //POST
 app.post('/api/persons', (req, res, next) => {
-  if (!req.body.name || !req.body.number) {
-    return next(new Error('contentMissing'))
-  }
-  Person.find({name: req.body.name}).then(person => {
-    if (person) {
-      error = 1
-      throw new Error('notUnique')
-    }
-    console.log('continuing execution')
-      const p = new Person({
-        name: req.body.name,
-        number: req.body.number,
-        display: true
-      })
-      p.save().then(savedPerson => {
-        console.log('person sent to db')
-        res.json(savedPerson.toJSON())
-      })
-  }).catch(err => next(err))
+    const p = new Person({
+      name: req.body.name,
+      number: req.body.number,
+      display: true
+    })
+    p.save().then(savedPerson => {
+      res.json(savedPerson.toJSON())
+    }).catch(err => next(err))
 
 })
 
@@ -117,12 +106,8 @@ const errorHandler = (err, req, res, next) => {
   console.error(err)
   if (err.name === 'CastError' && err.kind == 'ObjectId') {
     return res.status(400).send({ error: 'malformatted id' })
-  } else if (err.name === 'Error') {
-    if (err.message === 'contentMissing') {
-      return res.status(400).send({error: 'content missing'})
-    } else if (err.message === 'notUnique') {
-      return res.status(400).send({error: 'name not unique'})
-    }
+  } else if (err.name === 'ValidationError') {
+    return res.status(400).send(err.message)
   }
   next(err)
 }
