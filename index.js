@@ -82,7 +82,6 @@ app.put('/api/persons/:id', (req, res, next) => {
     .then(updatedPerson => {
       res.json(updatedPerson.toJSON())
     }).catch(error => {
-      console.log(error)
       next(error)
     })
 })
