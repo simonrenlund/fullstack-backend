@@ -90,7 +90,11 @@ app.put('/api/persons/:id', (req, res, next) => {
 //DELETE
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id).then(result => {
-    res.status(204).end()
+    if (result) {
+      res.status(204).end()
+    } else {
+      next()
+    }
   }).catch(error => next(error))
 })
 
