@@ -1,7 +1,7 @@
 require('dotenv').config()
 //express
 const express = require('express')
-app = express()
+const app = express()
 //bodyparser
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
@@ -60,14 +60,14 @@ app.get('/info', (req,res) => {
 
 //POST
 app.post('/api/persons', (req, res, next) => {
-    const p = new Person({
-      name: req.body.name,
-      number: req.body.number,
-      display: true
-    })
-    p.save().then(savedPerson => {
-      res.json(savedPerson.toJSON())
-    }).catch(err => next(err))
+  const p = new Person({
+    name: req.body.name,
+    number: req.body.number,
+    display: true
+  })
+  p.save().then(savedPerson => {
+    res.json(savedPerson.toJSON())
+  }).catch(err => next(err))
 
 })
 
